@@ -23,8 +23,8 @@ class UserstatementResource extends Resource
             ->schema([
                 Forms\Components\Select::make('user_id')
                     ->label('Select User')
-                    ->options(Userdetails::all()->pluck('account_holders', 'id')) // Fetch users from the userdetails table
-                    ->required(), // Make the user selection required
+                    ->options(Userdetails::all()->pluck('account_holders', 'id'))
+                    ->required(),
                 Forms\Components\DatePicker::make('date')
                     ->required(),
                 Forms\Components\TextInput::make('description')
@@ -46,6 +46,8 @@ class UserstatementResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\TextColumn::make('id')
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('user_id')
                     ->label('User')
                     ->getStateUsing(function ($record) {
@@ -75,7 +77,7 @@ class UserstatementResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->filters([ /* You can add filters here if needed */ ])
+            ->filters([ /* You can add filters here if needed */])
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),

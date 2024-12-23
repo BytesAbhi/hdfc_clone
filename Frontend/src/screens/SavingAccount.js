@@ -12,17 +12,20 @@ import {
 
 const {width, height} = Dimensions.get('window');
 
-const SavingAccount = () => {
-  const [Accdet, setAccdet] = useState('hide');
-  const [ActiveReqTab, setActiveReqTab] = useState('email');
-  const [ShowState, setShowState] = useState('hide');
-  const [isVisible, setIsVisible] = useState(false); // Control popup visibility
-  const [dropdownVisible, setDropdownVisible] = useState(null); // Control dropdown visibility
+const SavingAccount = ({navigation, route}) => {
+  const [Accdet, setAccdet] = useState('show');
+  const [ActiveReqTab, setActiveReqTab] = useState('download');
+  const [ShowState, setShowState] = useState('show');
+  const [visibleTransactions, setVisibleTransactions] = useState(5);
+  const [isVisible, setIsVisible] = useState(false);
+  const [dropdownVisible, setDropdownVisible] = useState(null);
   const [selectedDuration, setSelectedDuration] = useState('Current Month');
   const [selectedFormat, setSelectedFormat] = useState('PDF');
+  const {userDetails, userStatements} = route.params;
 
   const durationOptions = ['Current Month', 'Last Month', 'Custom Range'];
   const formatOptions = ['PDF', 'Excel'];
+
 
   const Actionsss = [
     {title: 'Open Fixed Deposit', NavigationLink: 'Open Fixed Deposit'},
@@ -39,61 +42,31 @@ const SavingAccount = () => {
   ];
 
   const accountData = [
-    {title: 'Account Holders', value: 'ABHISHEK S/O DEEP CHAND'},
-    {title: 'Nominee', value: 'RITA'},
-    {title: 'Branch', value: 'MANAV CHOWK AMBALA CITY'},
-    {title: 'IFSC', value: 'HDFC0003645'},
-    {title: 'MMID', value: 'Generate', isButton: true},
-    {title: 'Virtual Payment Address', value: 'Register', isButton: true},
-    {title: 'Account Balance', value: '₹ 0.00'},
-    {title: 'Required Monthly Average Balance', value: '₹ 10,000.00'},
-    {title: 'Uncleared Funds', value: '₹ 0.00'},
-    {title: 'Amount on Hold', value: '₹ 0.00'},
+    {title: 'Account Holders', value: userDetails[0].account_holders},
+    {title: 'Nominee', value: userDetails[0].nominee},
+    {title: 'Branch', value: userDetails[0].branch},
+    {title: 'IFSC', value: userDetails[0].ifsc},
+    {title: 'MMID', value: userDetails[0].mmid, isButton: true},
+    {
+      title: 'Virtual Payment Address',
+      value: userDetails[0].virtual_payment_address,
+      isButton: true,
+    },
+    {title: 'Account Balance', value: `₹ ${userDetails[0].account_balance}`},
+    {
+      title: 'Required Monthly Average Balance',
+      value: `₹ ${userDetails[0].required_monthly_average_balance}`,
+    },
+    {title: 'Uncleared Funds', value: `₹ ${userDetails[0].uncleared_funds}`},
+    {title: 'Amount on Hold', value: `₹ ${userDetails[0].amount_on_hold}`},
     {
       title: 'Linked Cards',
-      value: ['Card', 'Primary Card', '4355********7133'],
+      value: ['Card', 'Primary Card', userDetails[0].linked_cards],
       buttonLabel: 'View Card Details',
     },
-    {title: 'Spending Limit', value: '₹ 4,00,000.00'},
-  ];
-
-  const transactions = [
     {
-      date: '13 Dec 2024',
-      description: 'AMB CHRG INCL GST FOR DEC2023-MIR2534700965167',
-      refNum: 'MIR2534700965167',
-      amount: '₹ 439.09',
-      balance: '₹ 0.00',
-    },
-    {
-      date: '12 Dec 2024',
-      description:
-        'UPI-ROOP KUMAR-paytmqr5kfdug@ptys-YESB0PTMUPI-434798551645-Sent using Paytm U',
-      refNum: '434798551645',
-      amount: '₹ 90.00',
-      balance: '₹ 439.09',
-    },
-    {
-      date: '12 Dec 2024',
-      description: 'DEBIT CARD ANNUAL FEE-Oct-2024 281024-MIR2534795469779',
-      refNum: 'MIR2534795469779',
-      amount: '₹ 590.00',
-      balance: '₹ 529.09',
-    },
-    {
-      date: '11 Dec 2024',
-      description:
-        'UPI-Branch-branchonline@ybl-YESB0YBLUPI-434670231250-Branch Payment',
-      refNum: '434670231250',
-      amount: '₹ 518.00',
-      balance: '₹ 1,119.09',
-    },
-    {
-      date: '11 Dec 2024',
-      description: 'AMB CHRG INCL GST FOR NOV2024-MIR2534488154730',
-      refNum: 'MIR2534488154730',
-      amount: '₹ 581.91',
-      balance: '₹ 1,637.09',
+      title: 'Spending Limit',
+      value: `₹ ${userDetails[0].spending_limit}`,
     },
   ];
 
@@ -118,12 +91,20 @@ const SavingAccount = () => {
     </View>
   );
 
+  const showMoreTransactions = () => {
+    setVisibleTransactions(prevVisible => {
+      if (prevVisible < 25) {
+        return Math.min(prevVisible + 5, 25);
+      }
+      return prevVisible;
+    });
+  };
+
   return (
     <ScrollView
       style={{
         backgroundColor: '#E6E6E6',
-        flex: 0,
-        // height: height,
+        flex: 1,
       }}>
       <View
         style={{
@@ -136,7 +117,8 @@ const SavingAccount = () => {
           width: width,
         }}>
         <TouchableOpacity
-          style={{flexDirection: 'row', alignItems: 'center', gap: 15}}>
+          style={{flexDirection: 'row', alignItems: 'center', gap: 15}}
+          onPress={() => navigation.goBack()}>
           <Image
             source={require('../assets/Images/lef.png')}
             style={{width: 10.5, height: 18, tintColor: 'white'}}
@@ -188,11 +170,21 @@ const SavingAccount = () => {
               source={require('../assets/Images/rupee.png')}
               style={{width: 17.5, height: 17.5, tintColor: '#025296'}}
             />
-            0
+            {
+              parseFloat(userDetails[0].account_balance)
+                .toFixed(2)
+                .split('.')[0]
+            }{' '}
             <Text style={{fontWeight: '400', fontSize: 16, color: '#025296'}}>
-              .00
+              .
+              {
+                parseFloat(userDetails[0].account_balance)
+                  .toFixed(2)
+                  .split('.')[1]
+              }{' '}
             </Text>
           </Text>
+
           <Text style={{fontWeight: '400', fontSize: 14}}>
             {'( Account Balance + Overdraft + Hold )'}
           </Text>
@@ -235,7 +227,9 @@ const SavingAccount = () => {
                       </TouchableOpacity>
                     ) : Array.isArray(item.value) ? (
                       item.value.map((line, idx) => (
-                        <Text key={idx} style={{color: '#000000'}}>
+                        <Text
+                          key={idx}
+                          style={{color: '#000000', marginTop: 2.5}}>
                           {line}
                         </Text>
                       ))
@@ -348,30 +342,54 @@ const SavingAccount = () => {
           <View style={styles.container}>
             <Text style={styles.subHeader}>Recent Transactions</Text>
             <View>
-              {transactions.map((item, index) => (
-                <View key={index} style={styles.transactionContainer}>
-                  <View style={{width: '75%'}}>
-                    <Text style={styles.date}>{item.date}</Text>
-                    <Text style={styles.description}>{item.description}</Text>
-                    <Text style={styles.refNum}>Ref Num: {item.refNum}</Text>
+              {/* Map through the transactions and display the first 'visibleTransactions' */}
+              {userStatements.data
+                .slice(0, visibleTransactions)
+                .map((item, index) => (
+                  <View key={index} style={styles.transactionContainer}>
+                    <View style={{width: '65%', gap: 5}}>
+                      <Text style={styles.date}>{item.date}</Text>
+                      <Text style={styles.description}>{item.description}</Text>
+                      <Text style={styles.refNum}>Ref Num: {item.ref_num}</Text>
+                    </View>
+                    <View
+                      style={{
+                        width: '35%',
+                        // height: '100%',
+                        justifyContent: 'space-between',
+                        marginTop: 8,
+                        alignItems: 'flex-end',
+                        gap: 25,
+                        // backgroundColor:'green'
+                      }}>
+                      <View
+                        style={{
+                          alignItems: 'flex-start',
+                          flexDirection: 'row',
+                          justifyContent: 'flex-end',
+                          gap: 7.5,
+                        }}>
+                        <Text style={styles.amount}>{item.amount}</Text>
+                        <Image
+                          source={require('../assets/Images/up-arrow.png')}
+                          style={{
+                            height: 25,
+                            width: 25,
+                            transform: [{rotate: '45deg'}],
+                            tintColor: '#DE3226',
+                          }}
+                        />
+                      </View>
+                      <Text style={styles.balance}>
+                        Balance: {item.balance}
+                      </Text>
+                    </View>
                   </View>
-                  <Image
-                    source={require('../assets/Images/up-arrow.png')}
-                    style={{
-                      height: 25,
-                      width: 25,
-                      transform: [{rotate: '45deg'}],
-                      tintColor: '#DE3226',
-                    }}
-                  />
-                  <View style={styles.transactionFooter}>
-                    <Text style={styles.amount}>{item.amount}</Text>
-                    <Text style={styles.balance}>Balance: {item.balance}</Text>
-                  </View>
-                </View>
-              ))}
+                ))}
 
-              <TouchableOpacity style={styles.showMore}>
+              <TouchableOpacity
+                style={styles.showMore}
+                onPress={showMoreTransactions}>
                 <Text style={styles.showMoreText}>Show More</Text>
               </TouchableOpacity>
             </View>
@@ -600,13 +618,13 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     flexWrap: 'wrap',
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
   },
   date: {
     fontSize: 14,
     fontWeight: 'bold',
     color: '#444444',
-    marginBottom: 4,
+    marginBottom: 7.5,
   },
   description: {
     fontSize: 14,

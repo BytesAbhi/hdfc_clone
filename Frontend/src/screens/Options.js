@@ -62,11 +62,11 @@ const SectionItem = ({title, onPress}) => (
   </TouchableOpacity>
 );
 
-const Options = () => {
+const Options = ({navigation}) => {
   return (
     <ScrollView style={{paddingBottom: 20}}>
       <View style={styles.headerContainer}>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
           <Image
             source={require('../assets/Images/lef.png')}
             style={styles.headerImage}

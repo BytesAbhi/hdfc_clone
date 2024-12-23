@@ -8,95 +8,123 @@ import {
   StyleSheet,
   Dimensions,
   FlatList,
+  Modal,
 } from 'react-native';
 import ReactNativeBiometrics from 'react-native-biometrics';
 
 const {width, height} = Dimensions.get('window');
 
-const Landing = () => {
+const CustomAlert = ({message, visible, onClose}) => {
+  if (!visible) return null;
+
+  return (
+    <Modal transparent visible={visible} animationType="fade">
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContainer}>
+          <Text style={styles.modalText}>{message}</Text>
+          <TouchableOpacity style={styles.modalButton} onPress={onClose}>
+            <Text style={styles.modalButtonText}>OK</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
+const Landing = ({navigation}) => {
   const [activeMethod, setActiveMethod] = useState('fingerprint');
   const [pin, setPin] = useState(['', '', '', '']);
   const [password, setPassword] = useState('');
   const inputRefs = [useRef(), useRef(), useRef(), useRef()];
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
 
   const handleFingerprintLogin = async () => {
     const rnBiometrics = new ReactNativeBiometrics();
-  
-    rnBiometrics.simplePrompt({promptMessage: 'Confirm fingerprint'})
-      .then((resultObject) => {
-        const { success } = resultObject;
-  
+
+    rnBiometrics
+      .simplePrompt({promptMessage: 'Confirm fingerprint'})
+      .then(resultObject => {
+        const {success} = resultObject;
+
         if (success) {
-          console.log('successful biometrics provided');
-          // Handle successful login here
+          console.log('Successful biometrics provided');
+          navigation.navigate('Home');
         } else {
-          console.log('user cancelled biometric prompt');
+          console.log('User cancelled biometric prompt');
         }
       })
       .catch(() => {
-        console.log('biometrics failed');
+        console.log('Biometrics failed');
       });
   };
-
-  // useEffect(() => {
-  //   const initFingerprintScanner = async () => {
-  //     try {
-  //       await FingerprintScanner.isSensorAvailable();
-  //     } catch (error) {
-  //       console.error('Fingerprint sensor not available:', error);
-  //     }
-  //   };
-
-  //   initFingerprintScanner();
-
-  //   return () => {
-  //     if (FingerprintScanner) {
-  //       FingerprintScanner.release();
-  //     }
-  //   };
-  // }, []);
 
   const data = [
     {
       id: '1',
       title: 'Open New Account',
       icon: require('../assets/Images/new-account.png'),
+      navigation: 'Options',
     },
     {
       id: '2',
       title: 'Offers',
       icon: require('../assets/Images/sale.png'),
+      navigation: 'Options',
     },
     {
       id: '3',
       title: 'Home Loan',
       icon: require('../assets/Images/personal.png'),
+      navigation: 'Options',
     },
     {
       id: '4',
       title: 'Digital Rupee',
       icon: require('../assets/Images/rupeee.png'),
+      navigation: 'Options',
     },
     {
       id: '5',
       title: 'Chat Banking',
       icon: require('../assets/Images/whatsapp.png'),
+      navigation: 'Options',
     },
     {
       id: '6',
       title: 'PayZapp',
       icon: require('../assets/Images/money.png'),
+      navigation: 'Options',
     },
     {
       id: '7',
       title: 'Ask Eva',
       icon: require('../assets/Images/ask.png'),
+      navigation: 'Options',
     },
-    {id: '8', title: 'More', icon: require('../assets/Images/menuu.png')},
+    {
+      id: '8',
+      title: 'More',
+      icon: require('../assets/Images/menuu.png'),
+      navigation: 'Options',
+    },
+  ];
+
+  const loginMethods = [
+    {id: 'fingerprint', label: 'Fingerprint'},
+    {id: 'pin', label: '4-Digit PIN'},
+    {id: 'password', label: 'Password'},
   ];
 
   const handleLogin = () => {
-    console.log('Password entered:', password);
+    if (!password || password.trim() === '') {
+      setAlertVisible(true);
+    } else if (password !== '12345678') {
+      setAlertVisible(true);
+    } else {
+      console.log('Password entered:', password);
+      navigation.navigate('Home');
+    }
   };
 
   const handleForgotPassword = () => {
@@ -119,14 +147,6 @@ const Landing = () => {
     }
   };
 
-  // const handleFingerprintLogin = () => {
-  //   FingerprintScanner.authenticate({onAttempt: handleAuthenticationAttempt})
-  //     .then(() =>
-  //       Alert.alert('Success', 'Fingerprint authentication successful'),
-  //     )
-  //     .catch(error => Alert.alert('Error', error.message));
-  // };
-
   const handleAuthenticationAttempt = error => {
     if (error) {
       Alert.alert('Error', 'Authentication failed');
@@ -134,7 +154,9 @@ const Landing = () => {
   };
 
   const GridItem = ({item}) => (
-    <TouchableOpacity style={styles.itemContainer}>
+    <TouchableOpacity
+      style={styles.itemContainer}
+      onPress={() => navigation.navigate(item.navigation)}>
       <View
         style={{
           backgroundColor: '#fff',
@@ -157,8 +179,8 @@ const Landing = () => {
         style={{
           width: width,
           alignItems: 'center',
-          marginTop: 15,
-          height: height * 0.075,
+          marginTop: 25,
+          // height: height * 0.075,
         }}>
         <Image
           source={require('../assets/Images/bankLogo.png')}
@@ -175,32 +197,17 @@ const Landing = () => {
         <Text style={styles.LogWith}>Log in With</Text>
 
         <View style={styles.logMethods}>
-          <TouchableOpacity
-            style={[
-              styles.LogMethButt,
-              activeMethod === 'fingerprint' && {backgroundColor: '#E1ECF8'},
-            ]}
-            onPress={() => setActiveMethod('fingerprint')}>
-            <Text style={{textAlign: 'center'}}>Fingerprint</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.LogMethButt,
-              activeMethod === 'pin' && {backgroundColor: '#E1ECF8'},
-            ]}
-            onPress={() => setActiveMethod('pin')}>
-            <Text style={{textAlign: 'center'}}>4-Digit PIN</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.LogMethButt,
-              activeMethod === 'password' && {backgroundColor: '#E1ECF8'},
-            ]}
-            onPress={() => setActiveMethod('password')}>
-            <Text style={{textAlign: 'center'}}>Password</Text>
-          </TouchableOpacity>
+          {loginMethods.map(method => (
+            <TouchableOpacity
+              key={method.id}
+              style={[
+                styles.LogMethButt,
+                activeMethod === method.id && {backgroundColor: '#E1ECF8'},
+              ]}
+              onPress={() => setActiveMethod(method.id)}>
+              <Text style={{textAlign: 'center'}}>{method.label}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
 
         {activeMethod === 'fingerprint' && (
@@ -272,6 +279,7 @@ const Landing = () => {
             </TouchableOpacity>
           </View>
         )}
+
         <View
           style={{
             width: width * 0.89,
@@ -323,7 +331,7 @@ const Landing = () => {
           </View>
         </View>
       </View>
-      <View style={{width: width, height: height * 0.275}}>
+      <View style={{width: width, marginBottom: 10}}>
         <FlatList
           data={data}
           keyExtractor={item => item.id}
@@ -331,6 +339,11 @@ const Landing = () => {
           renderItem={({item}) => <GridItem item={item} />}
         />
       </View>
+      <CustomAlert
+        message={alertMessage}
+        visible={alertVisible}
+        onClose={() => setAlertVisible(false)}
+      />
     </View>
   );
 };
@@ -339,9 +352,8 @@ export default Landing;
 
 const styles = StyleSheet.create({
   container: {
-    flex: 0,
+    flex: 1,
     width: width * 1,
-    height: height,
     alignItems: 'center',
     flexDirection: 'column',
     justifyContent: 'space-between',
@@ -380,7 +392,6 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     color: '#8d8d8d',
     fontSize: 12,
-    // padding: 10,
     borderRadius: 5,
     fontWeight: 400,
   },
@@ -389,14 +400,14 @@ const styles = StyleSheet.create({
     borderColor: '#1D86FF',
     flexDirection: 'row',
     borderRadius: 10,
-    paddingVertical: 5,
-    paddingHorizontal: 5,
+    paddingVertical: 2,
+    paddingHorizontal: 2,
     width: '95%',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
   LogMethButt: {
-    paddingVertical: 10,
+    paddingVertical: 13,
     paddingHorizontal: 15,
     borderRadius: 7.5,
     width: '32.25%',
@@ -420,8 +431,9 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 12,
     textAlign: 'center',
-    marginTop: 2.5,
+    marginTop: 10,
     fontWeight: '300',
+    lineHeight: 12.5,
   },
   pinContainer: {
     flexDirection: 'row',
@@ -452,6 +464,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 20,
     paddingBottom: 5,
+    color: '#000',
   },
   forgotPasswordText: {
     color: '#007BFF',
@@ -469,4 +482,35 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContainer: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 10,
+    width: '80%',
+    alignItems: 'center',
+  },
+  modalText: {
+    fontSize: 18,
+    marginBottom: 20,
+  },
+  modalButton: {
+    backgroundColor: '#2C8EFF',
+    padding: 10,
+    borderRadius: 5,
+  },
+  modalButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  // container: {
+  //   flex: 1,
+  //   justifyContent: 'center',
+  //   alignItems: 'center',
+  // },
 });
