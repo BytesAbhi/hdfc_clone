@@ -2,6 +2,9 @@
 
 return [
 
+    // Barryvdh\DomPDF\ServiceProvider::class,
+
+
     /*
     |--------------------------------------------------------------------------
     | Application Name

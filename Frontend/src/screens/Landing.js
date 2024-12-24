@@ -9,6 +9,7 @@ import {
   Dimensions,
   FlatList,
   Modal,
+  ScrollView,
 } from 'react-native';
 import ReactNativeBiometrics from 'react-native-biometrics';
 
@@ -63,49 +64,49 @@ const Landing = ({navigation}) => {
     {
       id: '1',
       title: 'Open New Account',
-      icon: require('../assets/Images/new-account.png'),
+      icon: require('../assets/Images/o.png'),
       navigation: 'Options',
     },
     {
       id: '2',
       title: 'Offers',
-      icon: require('../assets/Images/sale.png'),
+      icon: require('../assets/Images/of.png'),
       navigation: 'Options',
     },
     {
       id: '3',
       title: 'Home Loan',
-      icon: require('../assets/Images/personal.png'),
+      icon: require('../assets/Images/hl.png'),
       navigation: 'Options',
     },
     {
       id: '4',
       title: 'Digital Rupee',
-      icon: require('../assets/Images/rupeee.png'),
+      icon: require('../assets/Images/dr.png'),
       navigation: 'Options',
     },
     {
       id: '5',
       title: 'Chat Banking',
-      icon: require('../assets/Images/whatsapp.png'),
+      icon: require('../assets/Images/cs.png'),
       navigation: 'Options',
     },
     {
       id: '6',
       title: 'PayZapp',
-      icon: require('../assets/Images/money.png'),
+      icon: require('../assets/Images/pz.png'),
       navigation: 'Options',
     },
     {
       id: '7',
       title: 'Ask Eva',
-      icon: require('../assets/Images/ask.png'),
+      icon: require('../assets/Images/ae.png'),
       navigation: 'Options',
     },
     {
       id: '8',
       title: 'More',
-      icon: require('../assets/Images/menuu.png'),
+      icon: require('../assets/Images/more.png'),
       navigation: 'Options',
     },
   ];
@@ -136,8 +137,19 @@ const Landing = ({navigation}) => {
     newPin[index] = value;
     setPin(newPin);
 
-    if (value && index < 3) {
-      inputRefs[index + 1].current.focus();
+    if (value) {
+      if (index < 3) {
+        inputRefs[index + 1].current.focus();
+      }
+    } else {
+      if (index > 0) {
+        inputRefs[index - 1].current.focus();
+      }
+    }
+
+    if (newPin.every(digit => digit && digit.length === 1)) {
+      console.log('Pin entered:', newPin.join(''));
+      navigation.navigate('Home');
     }
   };
 
@@ -159,9 +171,7 @@ const Landing = ({navigation}) => {
       onPress={() => navigation.navigate(item.navigation)}>
       <View
         style={{
-          backgroundColor: '#fff',
           borderRadius: 50,
-          padding: 5,
           width: 45,
           height: 45,
           alignItems: 'center',
@@ -174,13 +184,22 @@ const Landing = ({navigation}) => {
   );
 
   return (
-    <View style={styles.container}>
+    <View
+      style={{
+        flex: 1,
+        width: width * 1,
+
+        alignItems: 'center',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        backgroundColor: '#0A1238',
+      }}>
       <View
         style={{
           width: width,
           alignItems: 'center',
           marginTop: 25,
-          // height: height * 0.075,
+          height: height * 0.1,
         }}>
         <Image
           source={require('../assets/Images/bankLogo.png')}
@@ -352,7 +371,7 @@ export default Landing;
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flex: 0,
     width: width * 1,
     alignItems: 'center',
     flexDirection: 'column',
@@ -420,12 +439,11 @@ const styles = StyleSheet.create({
     margin: 10,
   },
   icon: {
-    width: 30,
-    height: 30,
+    width: 45,
+    height: 45,
     resizeMode: 'contain',
-    marginBottom: 5,
     backgroundColor: 'white',
-    tintColor: 'black',
+    borderRadius: 50,
   },
   text: {
     color: '#FFFFFF',
@@ -498,6 +516,7 @@ const styles = StyleSheet.create({
   modalText: {
     fontSize: 18,
     marginBottom: 20,
+    color: '#333',
   },
   modalButton: {
     backgroundColor: '#2C8EFF',
@@ -508,9 +527,4 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
   },
-  // container: {
-  //   flex: 1,
-  //   justifyContent: 'center',
-  //   alignItems: 'center',
-  // },
 });

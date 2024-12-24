@@ -13,35 +13,35 @@ const services = [
   {
     id: 1,
     label: 'UPI Payment',
-    image: require('../assets/Images/uip.jpg'),
+    image: require('../assets/Images/uip.png'),
   },
   {
     id: 2,
     label: 'Salary Account Services',
-    image: require('../assets/Images/accounting.png'),
+    image: require('../assets/Images/sal.png'),
   },
   {
     id: 3,
     label: 'm-Passbook',
-    image: require('../assets/Images/passbook.png'),
+    image: require('../assets/Images/pas.png'),
   },
   {
     id: 4,
     label: 'Merchant Standing Instruction',
-    image: require('../assets/Images/instructions.png'),
+    image: require('../assets/Images/m.png'),
   },
   {
     id: 5,
     label: 'Smart Account Opening',
-    image: require('../assets/Images/smart-home.png'),
+    image: require('../assets/Images/s.png'),
   },
-  {id: 6, label: 'MyCards', image: require('../assets/Images/credit-card.png')},
+  {id: 6, label: 'MyCards', image: require('../assets/Images/c.png')},
   {
     id: 7,
     label: 'ChatBanking on Whatsapp',
-    image: require('../assets/Images/whatsapp.png'),
+    image: require('../assets/Images/w.png'),
   },
-  {id: 8, label: 'Ask EVA', image: require('../assets/Images/request.png')},
+  {id: 8, label: 'Ask EVA', image: require('../assets/Images/a.png')},
 ];
 
 const {width, height} = Dimensions.get('window');
@@ -162,13 +162,13 @@ const styles = StyleSheet.create({
   card: {
     width: '100%',
     aspectRatio: 4 / 3,
-    backgroundColor: '#F7F9FC',
+    backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
   },
   image: {
-    width: '40%',
-    height: '40%',
+    width: '65%',
+    height: '65%',
     resizeMode: 'contain',
     marginBottom: 8,
   },

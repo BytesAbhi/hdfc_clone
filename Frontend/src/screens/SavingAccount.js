@@ -8,7 +8,11 @@ import {
   View,
   ScrollView,
   Modal,
+  Alert,
 } from 'react-native';
+import RNFS from 'react-native-fs';
+import {Baseurl} from './Appurl';
+import CustomAlert from './CustomAlert';
 
 const {width, height} = Dimensions.get('window');
 
@@ -21,12 +25,13 @@ const SavingAccount = ({navigation, route}) => {
   const [dropdownVisible, setDropdownVisible] = useState(null);
   const [selectedDuration, setSelectedDuration] = useState('Current Month');
   const [selectedFormat, setSelectedFormat] = useState('PDF');
+  const [loading, setLoading] = useState(false);
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertData, setAlertData] = useState({title: '', message: ''});
   const {userDetails, userStatements} = route.params;
 
   const durationOptions = ['Current Month', 'Last Month', 'Custom Range'];
   const formatOptions = ['PDF', 'Excel'];
-
-
   const Actionsss = [
     {title: 'Open Fixed Deposit', NavigationLink: 'Open Fixed Deposit'},
     {
@@ -70,12 +75,55 @@ const SavingAccount = ({navigation, route}) => {
     },
   ];
 
+  const userId = 1;
+
+  const showAlert = (title, message) => {
+    setAlertData({title, message});
+    setAlertVisible(true);
+  };
+
+  const downloadPDF = async () => {
+    setLoading(true);
+    try {
+      const url = `${Baseurl}/pdf/${userId}`;
+      console.log('Downloading from URL:', url);
+
+      const hdfcDir = `${RNFS.DownloadDirectoryPath}/HDFC`;
+
+      if (!(await RNFS.exists(hdfcDir))) {
+        await RNFS.mkdir(hdfcDir);
+      }
+
+      const downloadDest = `${hdfcDir}/user-report.pdf`;
+
+      const options = {
+        fromUrl: url,
+        toFile: downloadDest,
+      };
+
+      const result = await RNFS.downloadFile(options).promise;
+
+      if (result.statusCode === 200) {
+        showAlert('Download Complete', `PDF saved to: ${downloadDest}`);
+      } else {
+        showAlert('Download Failed', 'There was an error downloading the PDF');
+      }
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      showAlert(
+        'Download Failed',
+        'An error occurred while downloading the PDF',
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleDropdownSelect = (option, setter) => {
     setter(option);
     setDropdownVisible(null);
   };
 
-  // Function to render the custom dropdown
   const renderDropdown = (options, setter) => (
     <View style={styles.dropdownContainer}>
       <ScrollView>
@@ -319,7 +367,6 @@ const SavingAccount = ({navigation, route}) => {
         <TouchableOpacity
           activeOpacity={1}
           style={{
-            // backgroundColor: 'red',
             flexDirection: 'row',
             width: '99%',
             justifyContent: 'space-between',
@@ -355,12 +402,11 @@ const SavingAccount = ({navigation, route}) => {
                     <View
                       style={{
                         width: '35%',
-                        // height: '100%',
+
                         justifyContent: 'space-between',
                         marginTop: 8,
                         alignItems: 'flex-end',
                         gap: 25,
-                        // backgroundColor:'green'
                       }}>
                       <View
                         style={{
@@ -573,8 +619,9 @@ const SavingAccount = ({navigation, route}) => {
 
             <TouchableOpacity
               style={styles.confirmButton}
-              onPress={() => setIsVisible(false)}>
-              <Text style={styles.confirmText}>CONFIRM</Text>
+              onPress={downloadPDF}
+              disabled={loading}>
+              <Text style={styles.confirmText}>{ActiveReqTab == 'download' ? 'DOWNLOAD PDF': 'EMAIL PDF'}</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setIsVisible(false)}>
               <Text style={styles.cancelText}>CANCEL</Text>
@@ -582,6 +629,12 @@ const SavingAccount = ({navigation, route}) => {
           </View>
         </View>
       </Modal>
+      <CustomAlert
+        visible={alertVisible}
+        title={alertData.title}
+        message={alertData.message}
+        onClose={() => setAlertVisible(false)}
+      />
     </ScrollView>
   );
 };
@@ -608,7 +661,7 @@ const styles = StyleSheet.create({
   },
   subHeader: {
     fontSize: 14,
-    // fontWeight: '600',
+
     marginBottom: 12,
     color: '#666666',
   },
@@ -640,7 +693,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: 8,
     width: '100%',
-    // backgroundColor: 'red',
   },
   amount: {
     fontSize: 16,
@@ -669,6 +721,8 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '400',
     fontSize: 16,
+    width: '100%',
+    textAlign: 'center',
   },
   centeredView: {
     flex: 1,
@@ -677,12 +731,13 @@ const styles = StyleSheet.create({
   },
   overlay: {
     flex: 1,
+    width : '100%',
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   popup: {
-    width: '85%',
+    width: '90%',
     backgroundColor: 'white',
     borderRadius: 10,
     padding: 20,
@@ -696,7 +751,7 @@ const styles = StyleSheet.create({
   },
   label: {
     marginTop: 15,
-    fontWeight: 'bold',
+    fontWeight: '600',
     marginBottom: 5,
   },
   dropdownButton: {
@@ -737,6 +792,7 @@ const styles = StyleSheet.create({
   confirmText: {
     color: 'white',
     fontWeight: 'bold',
+    width : '100%',
   },
   cancelText: {
     color: '#2C8EFF',

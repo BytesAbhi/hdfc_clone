@@ -29,9 +29,18 @@ const App = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      const startTime = new Date();
+
+      // Use AbortController to cancel slow fetch requests after a timeout
+      const controller = new AbortController();
+      // const timeoutId = setTimeout(() => controller.abort(), 1500); // Timeout after 1500ms
+
       try {
         const [userDetailsResponse, userStatementsResponse] = await Promise.all(
-          [fetch(`${Baseurl}/userdetails`), fetch(`${Baseurl}/userstatements`)],
+          [
+            fetch(`${Baseurl}/userdetails`, {signal: controller.signal}),
+            fetch(`${Baseurl}/userstatements`, {signal: controller.signal}),
+          ],
         );
 
         if (!userDetailsResponse.ok || !userStatementsResponse.ok) {
@@ -43,15 +52,30 @@ const App = () => {
 
         setUserDetails(userDetailsData);
         setUserStatements(userStatementsData);
+
+        const endTime = new Date();
+        const elapsedTime = endTime - startTime;
+        console.log(`Data fetching completed in ${elapsedTime}ms`);
       } catch (error) {
-        console.error('Error fetching data:', error);
+        if (error.name === 'AbortError') {
+          console.error('Data fetch aborted due to timeout');
+        } else {
+          console.error('Error fetching data:', error);
+        }
       } finally {
         setLoading(false);
+        clearTimeout(timeoutId); // Cleanup the timeout
       }
     };
 
     fetchData();
   }, []);
+
+  const timeout = setTimeout(() => {
+    if (loading) {
+      setLoading(false);
+    }
+  }, 1500);
 
   if (loading) {
     return (

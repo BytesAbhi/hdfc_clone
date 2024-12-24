@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\PDFController;
 use App\Http\Controllers\Userdetailscontroller;
 use App\Http\Controllers\UserstatementController;
 
@@ -22,6 +23,6 @@ Route::prefix('v1')->group(function () {
 });
 
 
-
+Route::get('v1/pdf/{userId}', [PDFController::class, 'generatePDF']);
 Route::apiResource('v1/userstatements', UserstatementController::class);
 
