@@ -31,6 +31,21 @@ class Userdetails extends Model
         'amount_on_hold',
         'linked_cards',
         'spending_limit',
+        'address',
+        'city',
+        'state',
+        'phone_number',
+        'od_limit',
+        'currency',
+        'email',
+        'customer_id',
+        'account_no',
+        'account_open_date',
+        'account_status',
+        'rtgs_neft_ifsc',
+        'micr',
+        'branch_code',
+        'product_code',
     ];
 
     /**

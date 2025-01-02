@@ -13,6 +13,7 @@ import {
 import RNFS from 'react-native-fs';
 import {Baseurl} from './Appurl';
 import CustomAlert from './CustomAlert';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 const {width, height} = Dimensions.get('window');
 
@@ -29,6 +30,35 @@ const SavingAccount = ({navigation, route}) => {
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertData, setAlertData] = useState({title: '', message: ''});
   const {userDetails, userStatements} = route.params;
+
+  const [fromDate, setFromDate] = React.useState(null); // Start with `null`
+  const [toDate, setToDate] = React.useState(null); // Start with `null`
+  const [showFromDatePicker, setShowFromDatePicker] = useState(false);
+  const [showToDatePicker, setShowToDatePicker] = useState(false);
+
+  console.log(`${toDate} ${fromDate}`);
+
+  const handleDateChange = (event, date, type) => {
+    console.log('Raw Event:', event);
+    if (date) {
+      const formattedDate = new Date(date);
+      if (type === 'from') {
+        setFromDate(formattedDate); // Store formatted date as string
+      } else {
+        setToDate(formattedDate); // Store formatted date as string
+      }
+    }
+  };
+
+  // const readableFromDate = fromDate ? fromDate.toDateString() : 'N/A';
+  // const readableToDate = toDate ? toDate.toDateString() : 'N/A';
+
+
+
+  const handleCustomRangeSelect = () => {
+    setFromDate(null);
+    setToDate(null);
+  };
 
   const durationOptions = ['Current Month', 'Last Month', 'Custom Range'];
   const formatOptions = ['PDF', 'Excel'];
@@ -57,7 +87,10 @@ const SavingAccount = ({navigation, route}) => {
       value: userDetails[0].virtual_payment_address,
       isButton: true,
     },
-    {title: 'Account Balance', value: `₹ ${userDetails[0].account_balance}`},
+    {
+      title: 'Account Balance',
+      value: `₹ ${userStatements.data[userStatements.data.length - 1].balance}`,
+    },
     {
       title: 'Required Monthly Average Balance',
       value: `₹ ${userDetails[0].required_monthly_average_balance}`,
@@ -75,17 +108,31 @@ const SavingAccount = ({navigation, route}) => {
     },
   ];
 
-  const userId = 1;
+  const userId = 2;
 
   const showAlert = (title, message) => {
     setAlertData({title, message});
     setAlertVisible(true);
   };
 
+  const formatDate = date => {
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = (d.getMonth() + 1).toString().padStart(2, '0');
+    const day = d.getDate().toString().padStart(2, '0');
+    console.log('Formatted Date:', `${year}-${month}-${day}`);
+    return `${year}-${month}-${day}`;
+  };
+
   const downloadPDF = async () => {
     setLoading(true);
     try {
-      const url = `${Baseurl}/pdf/${userId}`;
+      const formattedFromDate = formatDate(fromDate);
+      const formattedToDate = formatDate(toDate);
+
+      console.log('Formatted Dates:', formattedFromDate, formattedToDate);
+
+      const url = `${Baseurl}/pdf/${userId}?from=${formattedFromDate}&to=${formattedToDate}`;
       console.log('Downloading from URL:', url);
 
       const hdfcDir = `${RNFS.DownloadDirectoryPath}/HDFC`;
@@ -94,7 +141,10 @@ const SavingAccount = ({navigation, route}) => {
         await RNFS.mkdir(hdfcDir);
       }
 
-      const downloadDest = `${hdfcDir}/user-report.pdf`;
+      const fileName = `user-report-${
+        new Date().toISOString().split('T')[0]
+      }.pdf`;
+      const downloadDest = `${hdfcDir}/${fileName}`;
 
       const options = {
         fromUrl: url,
@@ -219,14 +269,18 @@ const SavingAccount = ({navigation, route}) => {
               style={{width: 17.5, height: 17.5, tintColor: '#025296'}}
             />
             {
-              parseFloat(userDetails[0].account_balance)
+              parseFloat(
+                userStatements.data[userStatements.data.length - 1].balance,
+              )
                 .toFixed(2)
                 .split('.')[0]
             }{' '}
             <Text style={{fontWeight: '400', fontSize: 16, color: '#025296'}}>
               .
               {
-                parseFloat(userDetails[0].account_balance)
+                parseFloat(
+                  userStatements.data[userStatements.data.length - 1].balance,
+                )
                   .toFixed(2)
                   .split('.')[1]
               }{' '}
@@ -278,7 +332,7 @@ const SavingAccount = ({navigation, route}) => {
                         <Text
                           key={idx}
                           style={{color: '#000000', marginTop: 2.5}}>
-                          {line}
+                          {line[0].card_number}
                         </Text>
                       ))
                     ) : (
@@ -287,7 +341,6 @@ const SavingAccount = ({navigation, route}) => {
                       </Text>
                     )}
 
-                    {/* Additional Button for Linked Cards */}
                     {item.buttonLabel && (
                       <TouchableOpacity>
                         <Text style={{color: '#2C8EFF'}}>
@@ -389,9 +442,9 @@ const SavingAccount = ({navigation, route}) => {
           <View style={styles.container}>
             <Text style={styles.subHeader}>Recent Transactions</Text>
             <View>
-              {/* Map through the transactions and display the first 'visibleTransactions' */}
               {userStatements.data
                 .slice(0, visibleTransactions)
+                .reverse()
                 .map((item, index) => (
                   <View key={index} style={styles.transactionContainer}>
                     <View style={{width: '65%', gap: 5}}>
@@ -606,7 +659,56 @@ const SavingAccount = ({navigation, route}) => {
               <Text style={styles.selectedText}>{selectedDuration}</Text>
             </TouchableOpacity>
             {dropdownVisible === 'duration' &&
-              renderDropdown(durationOptions, setSelectedDuration)}
+              renderDropdown(durationOptions, option => {
+                setSelectedDuration(option);
+                if (option === 'Custom Range') {
+                  handleCustomRangeSelect();
+                }
+              })}
+
+            {selectedDuration === 'Custom Range' && (
+              <View>
+                <Text style={styles.label}>From Date</Text>
+                <TouchableOpacity
+                  style={styles.datePickerButton}
+                  onPress={() => setShowFromDatePicker(true)}>
+                  <Text style={styles.selectedText}>
+                    {fromDate ? fromDate.toDateString() : 'Select Date'}
+                  </Text>
+                </TouchableOpacity>
+                {showFromDatePicker && (
+                  <DateTimePicker
+                    value={fromDate || new Date()}
+                    mode="date"
+                    display="default"
+                    onChange={(e, date) => {
+                      setShowFromDatePicker(false);
+                      handleDateChange(e, date, 'from');
+                    }}
+                  />
+                )}
+
+                <Text style={styles.label}>To Date</Text>
+                <TouchableOpacity
+                  style={styles.datePickerButton}
+                  onPress={() => setShowToDatePicker(true)}>
+                  <Text style={styles.selectedText}>
+                    {toDate ? toDate.toDateString() : 'Select Date'}
+                  </Text>
+                </TouchableOpacity>
+                {showToDatePicker && (
+                  <DateTimePicker
+                    value={toDate || new Date()}
+                    mode="date"
+                    display="default"
+                    onChange={(e, date) => {
+                      setShowToDatePicker(false);
+                      handleDateChange(e, date, 'to');
+                    }}
+                  />
+                )}
+              </View>
+            )}
 
             <Text style={styles.label}>Format</Text>
             <TouchableOpacity
@@ -619,9 +721,10 @@ const SavingAccount = ({navigation, route}) => {
 
             <TouchableOpacity
               style={styles.confirmButton}
-              onPress={downloadPDF}
-              disabled={loading}>
-              <Text style={styles.confirmText}>{ActiveReqTab == 'download' ? 'DOWNLOAD PDF': 'EMAIL PDF'}</Text>
+              onPress={downloadPDF}>
+              <Text style={styles.confirmText}>
+                {ActiveReqTab === 'download' ? 'DOWNLOAD PDF' : 'EMAIL PDF'}
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setIsVisible(false)}>
               <Text style={styles.cancelText}>CANCEL</Text>
@@ -629,6 +732,7 @@ const SavingAccount = ({navigation, route}) => {
           </View>
         </View>
       </Modal>
+
       <CustomAlert
         visible={alertVisible}
         title={alertData.title}
@@ -731,7 +835,7 @@ const styles = StyleSheet.create({
   },
   overlay: {
     flex: 1,
-    width : '100%',
+    width: '100%',
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -792,7 +896,8 @@ const styles = StyleSheet.create({
   confirmText: {
     color: 'white',
     fontWeight: 'bold',
-    width : '100%',
+    width: '100%',
+    textAlign: 'center',
   },
   cancelText: {
     color: '#2C8EFF',

@@ -30,16 +30,23 @@ class UserstatementResource extends Resource
                 Forms\Components\TextInput::make('description')
                     ->required()
                     ->maxLength(255),
-                Forms\Components\TextInput::make('ref_num')
-                    ->required()
-                    ->maxLength(255),
+                Forms\Components\Select::make('transaction_type')
+                    ->label('Transaction Type')
+                    ->options([
+                        'Credit' => 'Credit',
+                        'Debit' => 'Debit',
+                    ])
+                    ->required(),
                 Forms\Components\TextInput::make('amount')
                     ->required()
                     ->numeric(),
                 Forms\Components\TextInput::make('balance')
-                    ->required()
-                    ->numeric(),
-            ]);
+                    ->label('Balance')
+                    ->disabled()
+                    ->numeric()
+                    ->helperText('This balance will be auto-calculated based on the transaction.'),
+            ])
+            ->columns(2);
     }
 
     public static function table(Table $table): Table
@@ -51,7 +58,6 @@ class UserstatementResource extends Resource
                 Tables\Columns\TextColumn::make('user_id')
                     ->label('User')
                     ->getStateUsing(function ($record) {
-                        // Fetch the user details based on the user_id and display account_holders name
                         return Userdetails::find($record->user_id)->account_holders ?? 'N/A';
                     })
                     ->sortable(),
@@ -60,14 +66,17 @@ class UserstatementResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('description')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('ref_num')
-                    ->searchable(),
+                Tables\Columns\TextColumn::make('transaction_type')
+                    ->label('Type')
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('amount')
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('balance')
                     ->numeric()
                     ->sortable(),
+                Tables\Columns\TextColumn::make('ref_num')
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -77,15 +86,12 @@ class UserstatementResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->filters([ /* You can add filters here if needed */])
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+                Tables\Actions\DeleteBulkAction::make(),
             ]);
     }
 
@@ -104,5 +110,33 @@ class UserstatementResource extends Resource
             'view' => Pages\ViewUserstatement::route('/{record}'),
             'edit' => Pages\EditUserstatement::route('/{record}/edit'),
         ];
+    }
+
+    /**
+     * Hook into form submission to handle balance updates and ref_num generation.
+     */
+    public static function beforeCreate(array $data): array
+    {
+        $user = Userdetails::findOrFail($data['user_id']);
+        $currentBalance = $user->account_balance;
+
+        // Handle transaction type
+        if ($data['transaction_type'] === 'Credit') {
+            $data['balance'] = $currentBalance + $data['amount'];
+        } elseif ($data['transaction_type'] === 'Debit') {
+            if ($currentBalance < $data['amount']) {
+                throw new \Exception('Insufficient balance for this transaction.');
+            }
+            $data['balance'] = $currentBalance - $data['amount'];
+        }
+
+        // Update user's balance
+        $user->account_balance = $data['balance'];
+        $user->save();
+
+        // Generate ref_num
+        $data['ref_num'] = strtoupper(uniqid('REF-'));
+
+        return $data;
     }
 }

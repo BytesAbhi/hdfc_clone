@@ -14,6 +14,13 @@ const Home = ({navigation, route}) => {
   const [ViewTab, setViewTab] = useState('overview');
   const {userDetails, userStatements} = route.params;
 
+
+  // if (userStatements.data && Array.isArray(userStatements.data)) {
+  //   console.log(userStatements.data.length);
+  // } else {
+  //   console.log('userStatements is not available or is not an array');
+  // }
+
   const services = [
     {Image: require('../assets/Images/bill.png'), Name: 'Bill Payment'},
     {
@@ -49,7 +56,7 @@ const Home = ({navigation, route}) => {
           <TouchableOpacity
             style={{flexDirection: 'row', alignItems: 'center', gap: 15}}>
             <Image
-              source={require('../assets/Images/menu.png')}
+              source={require('../assets/Images/hamburger.png')}
               style={{width: 22.5, height: 20, tintColor: 'white'}}
             />
             <Text style={{color: '#fff', fontSize: 16}}>Menu</Text>
@@ -178,13 +185,13 @@ const Home = ({navigation, route}) => {
                       }}>
                       ₹{' '}
                       {
-                        parseFloat(userDetails[0].account_balance)
+                        parseFloat(userStatements.data[userStatements.data.length - 1].balance)
                           .toFixed(2)
                           .split('.')[0]
                       }{' '}
                       .
                       {
-                        parseFloat(userDetails[0].account_balance)
+                        parseFloat(userStatements.data[userStatements.data.length - 1].balance)
                           .toFixed(2)
                           .split('.')[1]
                       }{' '}

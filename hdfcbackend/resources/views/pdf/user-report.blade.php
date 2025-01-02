@@ -144,72 +144,71 @@
                     <table style="width: 100%; font-size: 12.5px; border-collapse: collapse">
                         <tr>
                             <td>Account Branch:</td>
-                            <td>MANAVCHOWKAMBALACITY</td>
-                        </tr>
-                        <tr>
-                            <td>Address:</td>
-                            <td>
-                                HDFCBANKLTD, KHASRA NO. 12.579/2/1/3, MANAV CHOWK, AMBALA
-                                CITY,
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>City:</td>
                             <td>{{ $userDetails->branch }}</td>
                         </tr>
                         <tr>
+                            <td>Address:</td>
+                            <td>{{ $userDetails->address }}</td>
+                        </tr>
+                        <tr>
+                            <td>City:</td>
+                            <td>{{ $userDetails->city }}</td>
+                        </tr>
+                        <tr>
                             <td>State:</td>
-                            <td>{{ $userDetails->nominee }}</td>
+                            <td>{{ $userDetails->state }}</td>
                         </tr>
                         <tr>
                             <td>Phone No.:</td>
-                            <td>{{ $userDetails->nominee }}</td>
+                            <td>{{ $userDetails->phone_number }}</td>
                         </tr>
                         <tr>
                             <td>OD Limit:</td>
-                            <td>{{ $userDetails->nominee }}</td>
+                            <td>{{ $userDetails->od_limit }}</td>
                         </tr>
                         <tr>
                             <td>Currency:</td>
-                            <td>{{ $userDetails->nominee }}</td>
+                            <td>{{ $userDetails->currency }}</td>
                         </tr>
                         <tr>
                             <td>Email:</td>
-                            <td>{{ $userDetails->nominee }}</td>
+                            <td>{{ $userDetails->email }}</td>
                         </tr>
                         <tr>
                             <td>Cust ID:</td>
-                            <td>{{ $userDetails->nominee }}</td>
+                            <td>{{ $userDetails->customer_id }}</td>
                         </tr>
                         <tr>
                             <td>Account No:</td>
-                            <td>{{ $userDetails->nominee }}</td>
+                            <td>{{ $userDetails->account_no }}</td>
                         </tr>
                         <tr>
                             <td>A/C Open Date:</td>
-                            <td>{{ $userDetails->nominee }}</td>
+                            <td>{{ $userDetails->account_open_date ? $userDetails->account_open_date->format('Y-m-d') : '' }}
+                            </td>
                         </tr>
                         <tr>
                             <td>Account Status:</td>
-                            <td>{{ $userDetails->nominee }}</td>
+                            <td>{{ $userDetails->account_status }}</td>
                         </tr>
                         <tr>
                             <td>RTGS/NEFT IFSC:</td>
-                            <td>{{ $userDetails->nominee }}</td>
+                            <td>{{ $userDetails->rtgs_neft_ifsc }}</td>
                         </tr>
                         <tr>
                             <td>MICR:</td>
-                            <td>{{ $userDetails->nominee }}</td>
+                            <td>{{ $userDetails->micr }}</td>
                         </tr>
                         <tr>
                             <td>Branch Code:</td>
-                            <td>{{ $userDetails->nominee }}</td>
+                            <td>{{ $userDetails->branch_code }}</td>
                         </tr>
                         <tr>
                             <td>Product Code:</td>
-                            <td>{{ $userDetails->nominee }}</td>
+                            <td>{{ $userDetails->product_code }}</td>
                         </tr>
                     </table>
+
                 </td>
             </tr>
         </table>

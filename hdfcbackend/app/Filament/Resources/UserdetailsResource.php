@@ -3,15 +3,16 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\UserdetailsResource\Pages;
-use App\Filament\Resources\UserdetailsResource\RelationManagers;
 use App\Models\Userdetails;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Repeater;
 
 class UserdetailsResource extends Resource
 {
@@ -23,29 +24,121 @@ class UserdetailsResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('account_holders')
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('nominee')
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('branch')
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('ifsc')
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('mmid')
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('virtual_payment_address')
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('account_balance')
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('required_monthly_average_balance')
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('uncleared_funds')
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('amount_on_hold')
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('linked_cards'),
-                Forms\Components\TextInput::make('spending_limit')
-                    ->maxLength(255),
+                TextInput::make('account_holders')
+                    ->maxLength(255)
+                    ->nullable(),
+                TextInput::make('nominee')
+                    ->maxLength(255)
+                    ->nullable(),
+                TextInput::make('branch')
+                    ->maxLength(255)
+                    ->nullable(),
+                TextInput::make('ifsc')
+                    ->maxLength(255)
+                    ->nullable(),
+                TextInput::make('virtual_payment_address')
+                    ->maxLength(255)
+                    ->nullable(),
+                Repeater::make('linked_cards')
+                    ->collapsible()
+                    ->label('Linked Cards')
+                    ->schema([
+                        TextInput::make('card_number')
+                            ->label('Card Number')
+                            ->helperText('Enter card number (will auto-format after every 4 digits).')
+                            ->maxLength(19)
+                            ->nullable()
+                            ->reactive()
+                            ->afterStateUpdated(function (\Filament\Forms\Set $set, $state) {
+
+                                $formattedState = preg_replace('/(\d{4})(?=\d)/', '$1 ', $state);
+                                $set('card_number', $formattedState);
+                            }),
+                        TextInput::make('expiry_month')
+                            ->label('Expiry Month')
+                            ->maxLength(2)
+                            ->nullable(),
+                        TextInput::make('expiry_year')
+                            ->label('Expiry Year')
+                            ->maxLength(4)
+                            ->nullable(),
+                        TextInput::make('cvv')
+                            ->label('CVV')
+                            ->maxLength(4)
+                            ->nullable(),
+                        Select::make('card_type')
+                            ->label('Card Type')
+                            ->options([
+                                'debit' => 'Debit',
+                                'credit' => 'Credit',
+                                'rupay' => 'RuPay',
+                                'prepaid' => 'Prepaid',
+                            ])
+                            ->nullable(),
+                    ])
+                    ->minItems(1)
+                    ->maxItems(5)
+                    ->required(),
+                TextInput::make('spending_limit')
+                    ->maxLength(255)
+                    ->nullable(),
+                TextInput::make('uncleared_funds')
+                    ->maxLength(255)
+                    ->nullable(),
+                TextInput::make('amount_on_hold')
+                    ->maxLength(255)
+                    ->nullable(),
+                TextInput::make('address')
+                    ->maxLength(255)
+                    ->nullable(),
+                TextInput::make('city')
+                    ->maxLength(255)
+                    ->nullable(),
+                TextInput::make('state')
+                    ->maxLength(255)
+                    ->nullable(),
+                TextInput::make('account_balance')
+                    ->maxLength(255)
+                    ->nullable(),
+                TextInput::make('required_monthly_average_balance')
+                    ->maxLength(255)
+                    ->nullable(),
+                TextInput::make('phone_number')
+                    ->maxLength(20)
+                    ->nullable(),
+                TextInput::make('od_limit')
+                    ->maxLength(255)
+                    ->nullable(),
+                TextInput::make('currency')
+                    ->maxLength(255)
+                    ->nullable(),
+                TextInput::make('email')
+                    ->email()
+                    ->maxLength(255)
+                    ->nullable(),
+                TextInput::make('customer_id')
+                    ->maxLength(255)
+                    ->nullable(),
+                TextInput::make('account_no')
+                    ->maxLength(255)
+                    ->nullable(),
+                Forms\Components\DatePicker::make('account_open_date')
+                    ->nullable(),
+                TextInput::make('account_status')
+                    ->maxLength(255)
+                    ->nullable(),
+                TextInput::make('rtgs_neft_ifsc')
+                    ->maxLength(255)
+                    ->nullable(),
+                TextInput::make('micr')
+                    ->maxLength(255)
+                    ->nullable(),
+                TextInput::make('branch_code')
+                    ->maxLength(255)
+                    ->nullable(),
+                TextInput::make('product_code')
+                    ->maxLength(255)
+                    ->nullable(),
             ]);
     }
 
@@ -53,40 +146,81 @@ class UserdetailsResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('account_holders')
+
+                TextColumn::make('account_holders')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('nominee')
+                TextColumn::make('nominee')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('branch')
+                TextColumn::make('branch')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('ifsc')
+                TextColumn::make('ifsc')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('mmid')
+                TextColumn::make('linked_cards')
+                    ->formatStateUsing(function ($state) {
+
+                        if (is_array($state) && count($state) > 0) {
+                            $firstCard = $state[0];
+                            return 'Card: ' . $firstCard['card_number'] . ' (' . $firstCard['card_type'] . ')';
+                        }
+                        return 'No cards linked';
+                    })
+                    ->searchable()
+                    ->toggleable(),
+                TextColumn::make('virtual_payment_address')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('virtual_payment_address')
+                TextColumn::make('spending_limit')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('account_balance')
+                TextColumn::make('uncleared_funds')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('required_monthly_average_balance')
+                TextColumn::make('amount_on_hold')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('uncleared_funds')
+                TextColumn::make('address')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('amount_on_hold')
+                TextColumn::make('city')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('spending_limit')
+                TextColumn::make('state')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('created_at')
+                TextInput::make('account_balance')
+                    ->maxLength(255)
+                    ->nullable(),
+                TextInput::make('required_monthly_average_balance')
+                    ->maxLength(255)
+                    ->nullable(),
+                TextColumn::make('phone_number')
+                    ->searchable(),
+                TextColumn::make('od_limit')
+                    ->searchable(),
+                TextColumn::make('currency')
+                    ->searchable(),
+                TextColumn::make('email')
+                    ->searchable(),
+                TextColumn::make('customer_id')
+                    ->searchable(),
+                TextColumn::make('account_no')
+                    ->searchable(),
+                TextColumn::make('account_open_date')
+                    ->dateTime()
+                    ->sortable(),
+                TextColumn::make('account_status')
+                    ->searchable(),
+                TextColumn::make('rtgs_neft_ifsc')
+                    ->searchable(),
+                TextColumn::make('micr')
+                    ->searchable(),
+                TextColumn::make('branch_code')
+                    ->searchable(),
+                TextColumn::make('product_code')
+                    ->searchable(),
+                TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
+                TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->filters([
-                //
-            ])
+            ->filters([])
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
@@ -100,9 +234,7 @@ class UserdetailsResource extends Resource
 
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 
     public static function getPages(): array

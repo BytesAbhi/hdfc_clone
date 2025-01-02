@@ -188,7 +188,6 @@ const Landing = ({navigation}) => {
       style={{
         flex: 1,
         width: width * 1,
-
         alignItems: 'center',
         flexDirection: 'column',
         justifyContent: 'space-between',
